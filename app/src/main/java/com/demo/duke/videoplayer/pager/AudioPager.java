@@ -26,7 +26,6 @@ public class AudioPager extends BasePager {
          textView.setTextColor(Color.RED);
          textView.setTextSize(25);
          textView.setGravity(Gravity.CENTER);
-        Log.e(TDD,"AudioPagerinintVIEW:" + isInitData);
         return textView;
     }
 
@@ -34,6 +33,5 @@ public class AudioPager extends BasePager {
     public void initData() {
         super.initData();
         textView.setText("本地音频页面");
-        Log.e(TDD,"AudioPagerinitData:" + isInitData);
     }
 }

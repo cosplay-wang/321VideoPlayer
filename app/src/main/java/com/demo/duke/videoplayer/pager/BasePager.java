@@ -11,7 +11,6 @@ import android.view.View;
 public abstract class BasePager {
     public final Context context;
     private View rootView;
-    public boolean isInitData;
 
     public BasePager(Context context) {
         this.context = context;
