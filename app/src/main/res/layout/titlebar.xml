@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.demo.duke.videoplayer.view.TitleBar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="55dp"
+    android:background="#ff3097fd"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:src="@drawable/bg_logo" />
+
+    <TextView
+        android:clickable="true"
+        android:layout_weight="1"
+        android:layout_marginLeft="5dp"
+        android:drawablePadding="3dp"
+        android:id="@+id/tv_search"
+        android:drawableLeft="@drawable/tv_search_select"
+        android:textSize="14sp"
+        android:text="全网搜索"
+        android:textColor="@color/tv_back_textcolor_select"
+        android:background="@drawable/tv_back_seaarch_select"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <RelativeLayout
+        android:id="@+id/rl_game"
+        android:layout_marginLeft="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/tv_game"
+            android:drawableLeft="@drawable/ic_notification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:layout_alignRight="@+id/tv_game"
+            android:layout_width="6dp"
+            android:src="@drawable/game_point"
+            android:layout_height="6dp" />
+
+    </RelativeLayout>
+    <ImageView
+        android:id="@+id/iv_clear"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="8dp"
+        android:layout_width="wrap_content"
+        android:src="@drawable/bg_btn_clear_press"
+        android:layout_height="wrap_content" />
+</com.demo.duke.videoplayer.view.TitleBar>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.demo.duke.videoplayer.MainActivity">
+    <!--标题栏-->
+   <include layout="@layout/titlebar"/>
+    <!--内容区域-->
+    <FrameLayout
+        android:id="@+id/fl_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"></FrameLayout>
+    <!--底部标题栏-->
+    <RadioGroup
+        android:id="@+id/rg_button_tag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#11000000"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="3dp">
+
+        <RadioButton
+            android:id="@+id/rb_video"
+            style="@style/radio_style"
+            android:text="本地视频" />
+
+        <RadioButton
+            android:id="@+id/rb_audio"
+            style="@style/radio_style"
+            android:text="本地音频" />
+
+        <RadioButton
+            android:id="@+id/rb_net_video"
+            style="@style/radio_style"
+            android:text="网络视频" />
+
+        <RadioButton
+            android:id="@+id/rb_net_audio"
+            style="@style/radio_style"
+            android:text="网络音乐" />
+    </RadioGroup>
+
+</LinearLayout>
