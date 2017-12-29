@@ -2,6 +2,7 @@ package com.demo.duke.videoplayer.pager;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
@@ -14,13 +15,19 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.demo.duke.videoplayer.LifeActivity;
 import com.demo.duke.videoplayer.R;
+import com.demo.duke.videoplayer.SystemAudioPlayer;
+import com.demo.duke.videoplayer.SystemVideoPlayer;
+import com.demo.duke.videoplayer.adapter.VideoPagerListAdapter;
 import com.demo.duke.videoplayer.domain.MediaItem;
 import com.demo.duke.videoplayer.util.TimeUtil;
 
@@ -40,7 +47,7 @@ public class VideoPager extends BasePager {
     TextView textView;
     ProgressBar progressBar;
     private List<MediaItem> mediaItems = new ArrayList<>();
-    VideoAdapter videoAdapter;
+    VideoPagerListAdapter videoAdapter;
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -49,7 +56,9 @@ public class VideoPager extends BasePager {
                 //有数据
                 //设置文本，隐藏
                 //设置适配器
-                videoAdapter = new VideoAdapter();
+                Log.e("ddddddddddffff",mediaItems.size()+"----------");
+                Log.e("ddddddddddffff",mediaItems.size()+"----------"+mediaItems.get(0).toString());
+                videoAdapter = new VideoPagerListAdapter(mediaItems,context);
                 listView.setAdapter(videoAdapter);
                 textView.setVisibility(View.GONE);
             } else {
@@ -72,7 +81,48 @@ public class VideoPager extends BasePager {
         listView = view.findViewById(R.id.listview);
         textView = view.findViewById(R.id.tv_toast);
         progressBar = view.findViewById(R.id.pb_loading);
+        listView.setOnItemClickListener(new MyOnItemClickListener());
         return view;
+    }
+    class MyOnItemClickListener implements AdapterView.OnItemClickListener{
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            MediaItem mediaItem = mediaItems.get(position);
+            Toast.makeText(context,mediaItems.get(position).getName()+"position:"+position,Toast.LENGTH_SHORT).show();
+            // TODO: 2017/12/27  调启 系统所有的播放器--隐式意图
+//            Intent intent = new Intent();
+//            intent.setDataAndType(Uri.parse(mediaItem.getData()),"video/*");
+//            context.startActivity(intent);
+            // TODO: 2017/12/27 调用自己写的播放器 --显示意图  MediaPlayer 和 VideoView
+            Intent intent = new Intent(context,SystemVideoPlayer.class);
+            intent.setDataAndType(Uri.parse(mediaItem.getData()),"video/*");
+            context.startActivity(intent);
+            /**
+             * Android 系统中提供开发者开发多媒体应用（音视频）
+             * MediaPlayer 和 VideoView
+             *
+             * MediaPlayer
+             *
+             * 负责和底层打交道   解码的是jni的底层库  封装了start  pause  stop等方法  都是native的方法
+             * 播放视频的类
+             * 可以播放本地和网络的音视频
+             * 播放网络要加网络权限
+             * 1.执行流程
+             * 2.视频支持的格式  mp4(pc的mp4  不一定能播   码率低码率可以播base   high不行)  3gp  .m3u8
+             *
+             * VideoView
+             * 用来显示视频的，继承了surfaceview 实现了videoControl 接口，封装了MediaPlayer
+             * start  stop   等方法  本质上是调用mediaplayer的方法
+             *
+             * surfaceview
+             * 默认使用双缓冲技术  支持在子线程绘制图像  ，不会阻塞主线程，适合游戏和视频的开发
+             *
+             * 实现了videoControl 规范，便于控制面板调用videoview的方法
+             */
+            /**
+             * 视频的原理  每秒24帧
+             */
+        }
     }
 
     @Override
@@ -95,6 +145,7 @@ public class VideoPager extends BasePager {
             public void run() {
                 ContentResolver resolver = context.getContentResolver();
                 Uri uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+             //   Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                 String[] objs = {
                         MediaStore.Video.Media.DISPLAY_NAME,//名称
                         MediaStore.Video.Media.DURATION,//时长
@@ -106,7 +157,7 @@ public class VideoPager extends BasePager {
                 if (cursor != null) {
                     while (cursor.moveToNext()) {
                         MediaItem mediaItem = new MediaItem();
-                        mediaItems.add(mediaItem);
+
 
                         String name = cursor.getString(0);
                         mediaItem.setName(name);
@@ -122,58 +173,22 @@ public class VideoPager extends BasePager {
 
                         String artist = cursor.getString(4);
                         mediaItem.setArtist(artist);
-
+                        Log.e("opop",mediaItem.toString());
+                        mediaItems.add(mediaItem);
+                        Log.e("opop",mediaItem.toString()+"---------");
                     }
                     cursor.close();
+                    //handler发消息
+                    handler.sendEmptyMessage(10);
                 }
-                //handler发消息
-                handler.sendEmptyMessage(10);
+
             }
         }).start();
     }
-    class VideoAdapter extends BaseAdapter{
-        @Override
-        public int getCount() {
-            return mediaItems==null?0:mediaItems.size();
-        }
 
-        @Override
-        public Object getItem(int position) {
-            return mediaItems.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-             ViewHolder viewHolder;
-            if(convertView == null){
-                convertView = LayoutInflater.from(context).inflate(R.layout.item_media_pager,null);
-                viewHolder = new ViewHolder();
-                viewHolder.imageView = convertView.findViewById(R.id.iv_icon);
-                viewHolder.textViewName = convertView.findViewById(R.id.tv_name);
-                viewHolder.textViewLong = convertView.findViewById(R.id.tv_durtion);
-                viewHolder.textViewSize = convertView.findViewById(R.id.tv_size);
-                convertView.setTag(viewHolder);
-
-            }else{
-                viewHolder = (ViewHolder) convertView.getTag();
-            }
-            MediaItem mediaItem = mediaItems.get(position);
-            viewHolder.textViewName.setText(mediaItem.getName());
-            viewHolder.textViewLong.setText(TimeUtil.getFormatedDateTime("HH:mm:ss",mediaItem.getDuration()));
-            viewHolder.textViewSize.setText(android.text.format.Formatter.formatFileSize(context,mediaItem.getSize()));
-            return convertView;
-        }
-
-    }
-   static class ViewHolder{
-        ImageView imageView;
-        TextView textViewName;
-        TextView textViewLong;
-        TextView textViewSize;
+    @Override
+    public void clearData() {
+        super.clearData();
+        mediaItems.clear();
     }
 }

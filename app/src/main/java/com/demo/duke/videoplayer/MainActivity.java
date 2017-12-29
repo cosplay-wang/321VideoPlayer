@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.RadioGroup;
 
@@ -21,21 +22,72 @@ import com.demo.duke.videoplayer.pager.VideoPager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends FragmentActivity {
+import pub.devrel.easypermissions.EasyPermissions;
+
+public class MainActivity extends FragmentActivity implements EasyPermissions.PermissionCallbacks{
 
 
+    public static final String TAGG = "lifeactvity";
     RadioGroup radioGroup;
     FrameLayout frameLayout;
     private List<BasePager> basePagers;
     private int position;
-
+    final public int permissionRequestCode = 9;
+    String permissionss[] = {
+        Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.MODIFY_AUDIO_SETTINGS,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.CHANGE_WIFI_STATE
+    };
+    ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initPermission();
-        bindView();
+      //  bindView();
+        Log.e(TAGG,"oncreateA");
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.e(TAGG,"onStartA");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.e(TAGG,"onPauseA");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.e(TAGG,"onResumeA");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.e(TAGG,"onRestartA");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.e(TAGG,"onStopA");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.e(TAGG,"onDestroyA");
     }
 
     private void bindView() {
@@ -80,7 +132,7 @@ public class MainActivity extends FragmentActivity {
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         ft.replace(R.id.fl_content, new BaseFragment(getBasePager()),null);
-        ft.commit();
+        ft.commitAllowingStateLoss();
     }
 
     /**
@@ -96,29 +148,15 @@ public class MainActivity extends FragmentActivity {
      * android 6.0 以上需要动态申请权限
      */
     private void initPermission() {
-        String permissions[] = {
-                Manifest.permission.INTERNET,
-                Manifest.permission.ACCESS_NETWORK_STATE,
-                Manifest.permission.MODIFY_AUDIO_SETTINGS,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_SETTINGS,
-                Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.CHANGE_WIFI_STATE
-        };
 
-        ArrayList<String> toApplyList = new ArrayList<String>();
+        if (EasyPermissions.hasPermissions(this, permissionss)) {
+            Log.e(TAGG,"hasPermissionsbindviews");
+            bindView();
+        } else {
+            Log.e(TAGG,"requestPermissions");
+            EasyPermissions.requestPermissions(this, "", permissionRequestCode, permissionss);
+        }
 
-        for (String perm : permissions) {
-            if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, perm)) {
-                toApplyList.add(perm);
-                //进入到这里代表没有权限.
-            }
-        }
-        String tmpList[] = new String[toApplyList.size()];
-        if (!toApplyList.isEmpty()) {
-            ActivityCompat.requestPermissions(this, toApplyList.toArray(tmpList), 123);
-        }
 
     }
 
@@ -126,6 +164,26 @@ public class MainActivity extends FragmentActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         // 此处为android 6.0以上动态授权的回调，用户自行实现。
+       EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        Log.e(TAGG,"onPermissionsGranted" + perms.size());
+        for (int i = 0; i < perms.size(); i++) {    //通过循环输出列表中的内容
+             if(perms.get(i).equals(permissionss[4])){
+                 Log.e(TAGG,"onPermissionsGrantedbindviews");
+                 bindView();
+             }
+        }
+
+
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        Log.e(TAGG,"onPermissionsDenied");
+        finish();
+
+    }
 }

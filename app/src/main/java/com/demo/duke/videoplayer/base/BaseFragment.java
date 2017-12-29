@@ -16,6 +16,7 @@ import com.demo.duke.videoplayer.pager.BasePager;
 
 public class BaseFragment extends Fragment {
     private BasePager basePager;
+    private boolean hasLoadData;
 
     public BaseFragment() {
     }
@@ -40,7 +41,7 @@ public class BaseFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if (basePager != null) {
+        if (basePager != null && !hasLoadData) {
             basePager.initData();
         }
     }

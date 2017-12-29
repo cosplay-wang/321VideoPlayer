@@ -31,5 +31,8 @@ public abstract class BasePager {
     /**
      * 初始化数据
      */
-    public void initData(){};
+    public void initData(){
+        clearData();
+    };
+    public void clearData(){};
 }

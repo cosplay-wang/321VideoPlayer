@@ -2,6 +2,8 @@ package com.demo.duke.videoplayer.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by zhiwei.wang on 2017/12/26.
@@ -17,7 +19,11 @@ public class TimeUtil {
 
 
     public static String getFormatedDateTime(String pattern, long dateTime) {
-        SimpleDateFormat sDateFormat = new SimpleDateFormat(pattern);
-        return sDateFormat.format(new Date(dateTime + 0));
+
+
+
+        SimpleDateFormat sDateFormat = new SimpleDateFormat(pattern, Locale.CHINA);
+        sDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+0"));
+        return sDateFormat.format(new Date(dateTime));
     }
 }
