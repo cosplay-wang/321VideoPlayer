@@ -33,20 +33,17 @@
         </activity>
         <activity
             android:name=".SplashActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
-        </activity>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
         <activity
             android:name=".SystemVideoPlayer"
-            android:screenOrientation="landscape"
-            android:configChanges="keyboardHidden|screenSize|orientation" />
+            android:configChanges="keyboardHidden|screenSize|orientation"
+            android:screenOrientation="landscape" />
         <activity
             android:name=".LifeActivity"
             android:configChanges="keyboardHidden|screenSize|orientation"
             android:theme="@android:style/Theme.Dialog" />
-        <activity android:name=".SystemAudioPlayer">
-
-        </activity>
+        <activity android:name=".SystemAudioPlayer"></activity>
+        <activity android:name=".SurfaceViewMediaPlayerActivity"></activity>
     </application>
 
 </manifest>

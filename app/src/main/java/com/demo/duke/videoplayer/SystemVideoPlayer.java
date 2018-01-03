@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -19,10 +20,11 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.demo.duke.videoplayer.util.TimeUtil;
+import com.demo.duke.videoplayer.view.FullScreenVideoView;
 
 public class SystemVideoPlayer extends Activity implements View.OnClickListener {
     private static final int PROGRESS = 1;
-    VideoView videoView;
+    FullScreenVideoView videoView;
     private Uri uri;
 
     private LinearLayout llTop;
@@ -77,6 +79,8 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
         btnStartPause.setOnClickListener(this);
         btnNext.setOnClickListener(this);
         btnSwitchVideoScreen.setOnClickListener(this);
+        seekbarVideo.setOnSeekBarChangeListener(new MyOnSeekBarChangeListener());
+        videoView.setVideoViewLayoutParams(1);
     }
 
     /**
@@ -104,6 +108,7 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
             } else {
                 videoView.seekTo(0);
             }
+            handler.sendEmptyMessage(PROGRESS);
 
 
         } else if (v == btnStartPause) {
@@ -118,6 +123,7 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
                 videoView.start();
                 btnStartPause.setBackgroundResource(R.drawable.btn_start_pause_pause_select);
             }
+
             // Handle clicks for btnStartPause
         } else if (v == btnNext) {
             // Handle clicks for btnNext
@@ -126,9 +132,16 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
             } else {
                 videoView.seekTo(videoView.getDuration());
             }
+            handler.sendEmptyMessage(PROGRESS);
 
         } else if (v == btnSwitchVideoScreen) {
             // Handle clicks for btnSwitchVideoScreen
+           if(videoView.getParams()){
+               videoView.setVideoViewLayoutParams(2);
+           }else{
+               videoView.setVideoViewLayoutParams(1);
+           }
+
         }
     }
 
@@ -182,6 +195,23 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
 
         }
     }
+    class MyOnSeekBarChangeListener implements SeekBar.OnSeekBarChangeListener {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            videoView.seekTo(progress);
+            handler.sendEmptyMessage(PROGRESS);
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
+    }
 
     Handler handler = new Handler() {
         @Override
@@ -206,6 +236,39 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
     class MyOnErrorListener implements MediaPlayer.OnErrorListener {
         @Override
         public boolean onError(MediaPlayer mp, int what, int extra) {
+            switch (what){
+                case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+                    Log.e("text","发生未知错误");
+
+                    break;
+                case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                    Log.e("text","媒体服务器死机");
+                    break;
+                default:
+                    Log.e("text","onError+"+what);
+                    break;
+            }
+            switch (extra){
+                case MediaPlayer.MEDIA_ERROR_IO:
+                    //io读写错误
+                    Log.e("text","文件或网络相关的IO操作错误");
+                    break;
+                case MediaPlayer.MEDIA_ERROR_MALFORMED:
+                    //文件格式不支持
+                    Log.e("text","比特流编码标准或文件不符合相关规范");
+                    break;
+                case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
+                    //一些操作需要太长时间来完成,通常超过3 - 5秒。
+                    Log.e("text","操作超时");
+                    break;
+                case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
+                    //比特流编码标准或文件符合相关规范,但媒体框架不支持该功能
+                    Log.e("text","比特流编码标准或文件符合相关规范,但媒体框架不支持该功能");
+                    break;
+                default:
+                    Log.e("text","onError+"+extra);
+                    break;
+            }
             Toast.makeText(SystemVideoPlayer.this, "出错了", Toast.LENGTH_SHORT).show();
             return false;
         }
