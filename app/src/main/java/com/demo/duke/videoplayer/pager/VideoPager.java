@@ -56,8 +56,6 @@ public class VideoPager extends BasePager {
                 //有数据
                 //设置文本，隐藏
                 //设置适配器
-                Log.e("ddddddddddffff",mediaItems.size()+"----------");
-                Log.e("ddddddddddffff",mediaItems.size()+"----------"+mediaItems.get(0).toString());
                 videoAdapter = new VideoPagerListAdapter(mediaItems,context);
                 listView.setAdapter(videoAdapter);
                 textView.setVisibility(View.GONE);

@@ -7,7 +7,7 @@
     android:background="#000000"
     android:gravity="center"
     tools:context="com.demo.duke.videoplayer.SystemVideoPlayer">
-    <VideoView
+    <com.demo.duke.videoplayer.view.FullScreenVideoView
         android:id="@+id/video_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

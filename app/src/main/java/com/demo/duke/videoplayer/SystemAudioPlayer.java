@@ -133,9 +133,13 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
                     seekbarAudio.setProgress(currentPisition);
                     //3 每秒更新一次
                     removeMessages(PROGRESS);
+                    if(mediaPlayer.isPlaying()){
+
+
                     handler.sendEmptyMessageDelayed(PROGRESS, 1 * 1000);
                     //4 更新时间
                     tvCurrentTime.setText(TimeUtil.getFormatedDateTime("HH:mm:ss", currentPisition));
+                    }
                     break;
             }
         }
@@ -207,7 +211,6 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
     class MyOnBufferingUpdateListener implements MediaPlayer.OnBufferingUpdateListener {
         @Override
         public void onBufferingUpdate(MediaPlayer mp, int percent) {
-            Log.e("fffffffffff", "hfgibdjfb");
             seekbarAudio.setProgress(mp.getCurrentPosition());
             tvCurrentTime.setText(TimeUtil.getFormatedDateTime("HH:mm:ss", mp.getCurrentPosition()));
         }
