@@ -1,6 +1,8 @@
 package com.demo.duke.videoplayer;
 
 import android.app.Activity;
+import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -44,6 +46,7 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
     private Button btnNext;
     private Button btnSwitchVideoScreen;
     MediaController mediaController;
+    private AudioManager audioManager;
 
     /**
      * Find the Views in the layout<br />
@@ -80,6 +83,7 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
         btnNext.setOnClickListener(this);
         btnSwitchVideoScreen.setOnClickListener(this);
         seekbarVideo.setOnSeekBarChangeListener(new MyOnSeekBarChangeListener());
+        seekbarVideoVoice.setOnSeekBarChangeListener(new MyVoiceOnSeekBarChangeListener());
         videoView.setVideoViewLayoutParams(1);
     }
 
@@ -136,11 +140,11 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
 
         } else if (v == btnSwitchVideoScreen) {
             // Handle clicks for btnSwitchVideoScreen
-           if(videoView.getParams()){
-               videoView.setVideoViewLayoutParams(2);
-           }else{
-               videoView.setVideoViewLayoutParams(1);
-           }
+            if (videoView.getParams()) {
+                videoView.setVideoViewLayoutParams(2);
+            } else {
+                videoView.setVideoViewLayoutParams(1);
+            }
 
         }
     }
@@ -153,7 +157,7 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         findViews();
-
+        getVoice();
 
         //准备好的监听
         videoView.setOnPreparedListener(new MyOnPreparedListener());
@@ -177,6 +181,14 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
         videoView.setMediaController(mediaController);//本质上加上了一个帧布局，通过接口加上监听，
     }
 
+    private void getVoice() {
+        audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        int maxVolice = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);//最大音量
+        int currentVoice = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);//当前音量
+        seekbarVideoVoice.setMax(maxVolice);
+        seekbarVideoVoice.setProgress(currentVoice);
+    }
+
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
 
@@ -195,11 +207,36 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
 
         }
     }
+
     class MyOnSeekBarChangeListener implements SeekBar.OnSeekBarChangeListener {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            videoView.seekTo(progress);
+            if (fromUser) {
+                videoView.seekTo(progress);
+            }
             handler.sendEmptyMessage(PROGRESS);
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
+    }
+
+    class MyVoiceOnSeekBarChangeListener implements SeekBar.OnSeekBarChangeListener {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);//直接控制音量
+            /**
+             * 有按键 控制音量的时候。。适合用下边的
+             */
+          //  audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,AudioManager.ADJUST_LOWER,AudioManager.FX_FOCUS_NAVIGATION_UP);//调出系统音量显示
+           // audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,AudioManager.ADJUST_RAISE,AudioManager.FX_FOCUS_NAVIGATION_UP);//调出系统音量显示
         }
 
         @Override
@@ -236,37 +273,37 @@ public class SystemVideoPlayer extends Activity implements View.OnClickListener 
     class MyOnErrorListener implements MediaPlayer.OnErrorListener {
         @Override
         public boolean onError(MediaPlayer mp, int what, int extra) {
-            switch (what){
+            switch (what) {
                 case MediaPlayer.MEDIA_ERROR_UNKNOWN:
-                    Log.e("text","发生未知错误");
+                    Log.e("text", "发生未知错误");
 
                     break;
                 case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
-                    Log.e("text","媒体服务器死机");
+                    Log.e("text", "媒体服务器死机");
                     break;
                 default:
-                    Log.e("text","onError+"+what);
+                    Log.e("text", "onError+" + what);
                     break;
             }
-            switch (extra){
+            switch (extra) {
                 case MediaPlayer.MEDIA_ERROR_IO:
                     //io读写错误
-                    Log.e("text","文件或网络相关的IO操作错误");
+                    Log.e("text", "文件或网络相关的IO操作错误");
                     break;
                 case MediaPlayer.MEDIA_ERROR_MALFORMED:
                     //文件格式不支持
-                    Log.e("text","比特流编码标准或文件不符合相关规范");
+                    Log.e("text", "比特流编码标准或文件不符合相关规范");
                     break;
                 case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
                     //一些操作需要太长时间来完成,通常超过3 - 5秒。
-                    Log.e("text","操作超时");
+                    Log.e("text", "操作超时");
                     break;
                 case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
                     //比特流编码标准或文件符合相关规范,但媒体框架不支持该功能
-                    Log.e("text","比特流编码标准或文件符合相关规范,但媒体框架不支持该功能");
+                    Log.e("text", "比特流编码标准或文件符合相关规范,但媒体框架不支持该功能");
                     break;
                 default:
-                    Log.e("text","onError+"+extra);
+                    Log.e("text", "onError+" + extra);
                     break;
             }
             Toast.makeText(SystemVideoPlayer.this, "出错了", Toast.LENGTH_SHORT).show();
