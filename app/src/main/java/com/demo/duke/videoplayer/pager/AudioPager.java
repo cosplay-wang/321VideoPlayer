@@ -87,7 +87,7 @@ public class AudioPager extends BasePager {
 //            context.startActivity(intent);
             // TODO: 2017/12/27 调用自己写的播放器 --显示意图  MediaPlayer 和 VideoView
             Intent intent = new Intent(context,SystemAudioPlayer.class);
-            intent.setDataAndType(Uri.parse(mediaItem.getData()),"video/*");
+            intent.putExtra("mediaItem",mediaItem);
             context.startActivity(intent);
             /**
              * Android 系统中提供开发者开发多媒体应用（音视频）

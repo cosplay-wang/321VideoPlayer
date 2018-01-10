@@ -71,6 +71,7 @@ public class NetAudioPager extends BasePager {
             OnlineMusic mediaItem = mediaItems.get(position);
             playMediaItem.setName(mediaItem.getTitle());
             playMediaItem.setArtist(mediaItem.getArtist_name());
+            playMediaItem.setCover(mediaItem.getPic_small());
             doDownloadOnlineMusicPath(mediaItem);
             /**
              * Android 系统中提供开发者开发多媒体应用（音视频）
@@ -163,7 +164,7 @@ public class NetAudioPager extends BasePager {
                 playMediaItem.setDuration(value.getBitrate().getFile_duration() * 1000);
                 // TODO: 2017/12/27 调用自己写的播放器 --显示意图  MediaPlayer 和 VideoView
                 Intent intent = new Intent(context,SystemAudioPlayer.class);
-                intent.setDataAndType(Uri.parse(playMediaItem.getData()),"video/*");
+                intent.putExtra("mediaItem",playMediaItem);
                 context.startActivity(intent);
             }
 

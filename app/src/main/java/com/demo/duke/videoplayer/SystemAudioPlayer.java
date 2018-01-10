@@ -2,60 +2,57 @@ package com.demo.duke.videoplayer;
 
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Environment;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.demo.duke.videoplayer.domain.MediaItem;
 import com.demo.duke.videoplayer.util.TimeUtil;
+import com.demo.duke.videoplayer.view.MusicPlayerView;
 
-import java.io.File;
 import java.io.IOException;
 
-public class SystemAudioPlayer extends AppCompatActivity implements View.OnClickListener {
+public class SystemAudioPlayer extends AppCompatActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
     private static final int PROGRESS = 2;
-    private LinearLayout llBottom;
-    private TextView tvCurrentTime;
-    private SeekBar seekbarAudio;
-    private TextView tvDurtion;
-    private Button btnExit;
-    private Button btnPre;
-    private Button btnStartPause;
-    private Button btnNext;
-    private Button btnSwitchAudioScreen;
     private MediaPlayer mediaPlayer;
 
-    /**
-     * Find the Views in the layout<br />
-     * <br />
-     * Auto-created on 2017-12-29 10:34:15 by Android Layout Finder
-     * (http://www.buzzingandroid.com/tools/android-layout-finder)
-     */
+    private LinearLayout playTopLin;
+    private ImageView ivBack;
+    private TextView tvTitle;
+    private TextView tvArtist;
+    private MusicPlayerView musicplayView;
+    private TextView tvCurrentTime;
+    private SeekBar sbProgress;
+    private TextView tvTotalTime;
+    private ImageView ivMode;
+    private ImageView ivPrev;
+    private ImageView ivPlay;
+    private ImageView ivNext;
+    MediaItem mediaItem;
+
     private void findViews() {
         setContentView(R.layout.activity_system_audio_player);
-        llBottom = (LinearLayout) findViewById(R.id.ll_bottom);
+        playTopLin = (LinearLayout) findViewById(R.id.play_top_lin);
+        ivBack = (ImageView) findViewById(R.id.iv_back);
+        tvTitle = (TextView) findViewById(R.id.tv_title);
+        tvArtist = (TextView) findViewById(R.id.tv_artist);
+        musicplayView = (MusicPlayerView) findViewById(R.id.musicplay_view);
         tvCurrentTime = (TextView) findViewById(R.id.tv_current_time);
-        seekbarAudio = (SeekBar) findViewById(R.id.seekbar_audio);
-        tvDurtion = (TextView) findViewById(R.id.tv_durtion);
-        btnExit = (Button) findViewById(R.id.btn_exit);
-        btnPre = (Button) findViewById(R.id.btn_pre);
-        btnStartPause = (Button) findViewById(R.id.btn_start_pause);
-        btnNext = (Button) findViewById(R.id.btn_next);
-        btnSwitchAudioScreen = (Button) findViewById(R.id.btn_switch_audio_screen);
-
-        btnExit.setOnClickListener(this);
-        btnPre.setOnClickListener(this);
-        btnStartPause.setOnClickListener(this);
-        btnNext.setOnClickListener(this);
-        btnSwitchAudioScreen.setOnClickListener(this);
+        sbProgress = (SeekBar) findViewById(R.id.sb_progress);
+        tvTotalTime = (TextView) findViewById(R.id.tv_total_time);
+        ivMode = (ImageView) findViewById(R.id.iv_mode);
+        ivPrev = (ImageView) findViewById(R.id.iv_prev);
+        ivPlay = (ImageView) findViewById(R.id.iv_play);
+        ivNext = (ImageView) findViewById(R.id.iv_next);
+        ivPlay.setOnClickListener(this);
+        sbProgress.setOnSeekBarChangeListener(this);
     }
 
     /**
@@ -66,30 +63,21 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
      */
     @Override
     public void onClick(View v) {
-        if (v == btnExit) {
-            // Handle clicks for btnExit
-        } else if (v == btnPre) {
-            // Handle clicks for btnPre
-        } else if (v == btnStartPause) {
-
+        if (v.getId() == R.id.iv_play) {
             if (mediaPlayer.isPlaying()) {
-                //暂停--设置为暂停
-                //按钮设置为播放
+                ivPlay.setSelected(false);
+                musicplayView.pauseMusic();
                 pause();
-                btnStartPause.setBackgroundResource(R.drawable.btn_start_pause_start_select);
             } else {
-                //视频播放
-                //按钮设置为暂停
+                ivPlay.setSelected(true);
+                musicplayView.playMusic();
                 mediaPlayer.start();
-                btnStartPause.setBackgroundResource(R.drawable.btn_start_pause_pause_select);
+                //发消息
+                Message message = handler.obtainMessage();
+                message.obj = mediaPlayer.getCurrentPosition();
+                message.what = PROGRESS;
+                handler.sendMessage(message);
             }
-
-
-            // Handle clicks for btnStartPause
-        } else if (v == btnNext) {
-            // Handle clicks for btnNext
-        } else if (v == btnSwitchAudioScreen) {
-            // Handle clicks for btnSwitchAudioScreen
         }
     }
 
@@ -97,7 +85,15 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         findViews();
-        Uri uri = getIntent().getData();
+        mediaItem = (MediaItem) getIntent().getSerializableExtra("mediaItem");
+        Uri uri = Uri.parse(mediaItem.getData());
+        if (!mediaItem.getName().isEmpty()) {
+            tvTitle.setText(mediaItem.getName());
+        }
+        if (!mediaItem.getArtist().isEmpty()) {
+            tvArtist.setText(mediaItem.getArtist());
+        }
+        musicplayView.setCover(mediaItem.getCover());
         try {
             if (uri != null) {
                 mediaPlayer = new MediaPlayer();
@@ -126,21 +122,22 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
             super.handleMessage(msg);
             switch (msg.what) {
                 case PROGRESS:
-                    //1.得到当前的播放进度
+                    if (mediaPlayer != null) {
+                        if (mediaPlayer.isPlaying()) {
+                            //1.得到当前的播放进度
 
-                    int currentPisition = mediaPlayer.getCurrentPosition();
-                    //2. 设置seekbar setprogress
-                    seekbarAudio.setProgress(currentPisition);
-                    //3 每秒更新一次
-                    removeMessages(PROGRESS);
-                    if(mediaPlayer.isPlaying()){
+                            int currentPisition = mediaPlayer.getCurrentPosition();
+                            //2. 设置seekbar setprogress
+                            sbProgress.setProgress(currentPisition);
+                            //3 每秒更新一次
+                            removeMessages(PROGRESS);
 
-
-                    handler.sendEmptyMessageDelayed(PROGRESS, 1 * 1000);
-                    //4 更新时间
-                    tvCurrentTime.setText(TimeUtil.getFormatedDateTime("HH:mm:ss", currentPisition));
+                            handler.sendEmptyMessageDelayed(PROGRESS, 1 * 1000);
+                            //4 更新时间
+                            tvCurrentTime.setText(TimeUtil.getFormatedDateTime("mm:ss", currentPisition));
+                        }
+                        break;
                     }
-                    break;
             }
         }
     };
@@ -150,9 +147,11 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
         @Override
         public void onPrepared(MediaPlayer mp) {
             mediaPlayer.start();
+            ivPlay.setSelected(true);
+            musicplayView.playMusic();
             int duration = mp.getDuration();//音频的总时长   mp.getDuration(); 关联总长度
-            seekbarAudio.setMax(duration);
-            tvDurtion.setText(TimeUtil.getFormatedDateTime("HH:mm:ss", duration));
+            sbProgress.setMax(duration);
+            tvTotalTime.setText(TimeUtil.getFormatedDateTime("mm:ss", duration));
             Log.e("TimeUtil", TimeUtil.getFormatedDateTime("HH:mm:ss", duration));
 
             //发消息
@@ -211,8 +210,8 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
     class MyOnBufferingUpdateListener implements MediaPlayer.OnBufferingUpdateListener {
         @Override
         public void onBufferingUpdate(MediaPlayer mp, int percent) {
-            seekbarAudio.setProgress(mp.getCurrentPosition());
-            tvCurrentTime.setText(TimeUtil.getFormatedDateTime("HH:mm:ss", mp.getCurrentPosition()));
+            sbProgress.setProgress(mp.getCurrentPosition());
+            tvCurrentTime.setText(TimeUtil.getFormatedDateTime("mm:ss", mp.getCurrentPosition()));
         }
     }
 
@@ -220,5 +219,24 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
     protected void onStop() {
         super.onStop();
         stop();
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (fromUser) {
+            if (mediaPlayer != null) {
+                mediaPlayer.seekTo(progress);
+            }
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
     }
 }

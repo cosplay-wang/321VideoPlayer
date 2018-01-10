@@ -1,16 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.demo.duke.videoplayer.SystemAudioPlayer">
-
-    <LinearLayout
-        android:background="#55000000"
+    android:background="@drawable/play_page_default_bg">
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></LinearLayout>
-    <include layout="@layout/media_controller_audio"/>
+        android:layout_height="match_parent"
+        android:background="#80000000">
+        <LinearLayout
+            android:id="@+id/play_top_lin"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <ImageView
+                android:id="@+id/iv_back"
+                android:layout_width="?attr/actionBarSize"
+                android:layout_height="?attr/actionBarSize"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_arrow_down" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
+                android:orientation="vertical">
 
-</FrameLayout>
+                <TextView
+                    android:id="@+id/tv_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="珊瑚海"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_artist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="周杰伦"
+                    android:textColor="#9E9E9E"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+        <include
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            layout="@layout/include_play_page_controller"/>
+
+        <com.demo.duke.videoplayer.view.MusicPlayerView
+            android:layout_below="@+id/play_top_lin"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/musicplay_view"
+            />
+    </RelativeLayout>
+</RelativeLayout>
