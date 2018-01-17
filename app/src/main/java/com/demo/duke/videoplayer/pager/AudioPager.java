@@ -22,6 +22,8 @@ import com.demo.duke.videoplayer.R;
 import com.demo.duke.videoplayer.SystemAudioPlayer;
 import com.demo.duke.videoplayer.adapter.VideoPagerListAdapter;
 import com.demo.duke.videoplayer.domain.MediaItem;
+import com.demo.duke.videoplayer.service.MusicPlayCenter;
+import com.demo.duke.videoplayer.service.PlayMusicService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,9 +50,11 @@ public class AudioPager extends BasePager {
                 //有数据
                 //设置文本，隐藏
                 //设置适配器
-                Log.e("ddddddddddffff",mediaItems.size()+"----------");
-                Log.e("ddddddddddffff",mediaItems.size()+"----------"+mediaItems.get(0).toString());
-                videoAdapter = new VideoPagerListAdapter(mediaItems,context);
+                Log.e("ddddddddddffff", mediaItems.size() + "----------");
+                Log.e("ddddddddddffff", mediaItems.size() + "----------" + mediaItems.get(0).toString());
+                MusicPlayCenter.getMusicPlayCenter().getMediaItemList().clear();
+                MusicPlayCenter.getMusicPlayCenter().getMediaItemList().addAll(mediaItems);
+                videoAdapter = new VideoPagerListAdapter(mediaItems, context);
                 listView.setAdapter(videoAdapter);
                 textView.setVisibility(View.GONE);
             } else {
@@ -76,19 +80,24 @@ public class AudioPager extends BasePager {
         listView.setOnItemClickListener(new AudioPager.MyOnItemClickListener());
         return view;
     }
-    class MyOnItemClickListener implements AdapterView.OnItemClickListener{
+
+    class MyOnItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             MediaItem mediaItem = mediaItems.get(position);
-            Toast.makeText(context,mediaItems.get(position).getName()+"position:"+position,Toast.LENGTH_SHORT).show();
+            if (MusicPlayCenter.getMusicPlayCenter().getPlayMusicService() != null) {
+                MusicPlayCenter.getMusicPlayCenter().getPlayMusicService().play(position);
+            }
+
+
             // TODO: 2017/12/27  调启 系统所有的播放器--隐式意图
 //            Intent intent = new Intent();
 //            intent.setDataAndType(Uri.parse(mediaItem.getData()),"video/*");
 //            context.startActivity(intent);
             // TODO: 2017/12/27 调用自己写的播放器 --显示意图  MediaPlayer 和 VideoView
-            Intent intent = new Intent(context,SystemAudioPlayer.class);
-            intent.putExtra("mediaItem",mediaItem);
-            context.startActivity(intent);
+//            Intent intent = new Intent(context,SystemAudioPlayer.class);
+//            intent.putExtra("mediaItem",mediaItem);
+//            context.startActivity(intent);
             /**
              * Android 系统中提供开发者开发多媒体应用（音视频）
              * MediaPlayer 和 VideoView
@@ -136,8 +145,8 @@ public class AudioPager extends BasePager {
             @Override
             public void run() {
                 ContentResolver resolver = context.getContentResolver();
-               // Uri uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                    Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                // Uri uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                 String[] objs = {
                         MediaStore.Video.Media.DISPLAY_NAME,//名称
                         MediaStore.Video.Media.DURATION,//时长
@@ -165,9 +174,9 @@ public class AudioPager extends BasePager {
 
                         String artist = cursor.getString(4);
                         mediaItem.setArtist(artist);
-                        Log.e("opop",mediaItem.toString());
+                        Log.e("opop", mediaItem.toString());
                         mediaItems.add(mediaItem);
-                        Log.e("opop",mediaItem.toString()+"---------");
+                        Log.e("opop", mediaItem.toString() + "---------");
                     }
                     cursor.close();
                     //handler发消息

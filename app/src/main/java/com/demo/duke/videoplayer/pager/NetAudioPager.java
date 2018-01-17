@@ -22,6 +22,7 @@ import com.demo.duke.videoplayer.domain.MediaItem;
 import com.demo.duke.videoplayer.domain.OnlineMusic;
 import com.demo.duke.videoplayer.http.HttpUtils;
 import com.demo.duke.videoplayer.http.OkhttpHeader;
+import com.demo.duke.videoplayer.service.MusicPlayCenter;
 import com.demo.duke.videoplayer.util.JsonUtil;
 
 import org.json.JSONObject;
@@ -111,6 +112,8 @@ public class NetAudioPager extends BasePager {
             @Override
             public void onNext(List<OnlineMusic> value) {
                 mediaItems.addAll(value);
+//                MusicPlayCenter.getMusicPlayCenter().getMediaItemList().clear();
+//                MusicPlayCenter.getMusicPlayCenter().getMediaItemList().addAll(mediaItems);
                 netAudioAdapter = new NetAudioAdapter(mediaItems,context);
                 listView.setAdapter(netAudioAdapter);
                 textView.setVisibility(View.GONE);

@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.demo.duke.videoplayer.domain.MediaItem;
 import com.demo.duke.videoplayer.util.TimeUtil;
 import com.demo.duke.videoplayer.view.MusicPlayerView;
@@ -109,7 +110,7 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
             e.printStackTrace();
         }
 
-
+        mediaPlayer.setLooping(true);
         mediaPlayer.setOnCompletionListener(new MyOnCompletionListener());
         mediaPlayer.setOnErrorListener(new MyOnErrorListener());
         mediaPlayer.setOnBufferingUpdateListener(new MyOnBufferingUpdateListener());//缓冲的进度  ，不是播放的进度
@@ -202,7 +203,8 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
     class MyOnCompletionListener implements MediaPlayer.OnCompletionListener {
         @Override
         public void onCompletion(MediaPlayer mp) {
-            stop();
+            //在调用oncompletion  方法的时候代表 播放完毕，
+            //  stop();
             Toast.makeText(SystemAudioPlayer.this, "播放完成：", Toast.LENGTH_SHORT).show();
         }
     }
