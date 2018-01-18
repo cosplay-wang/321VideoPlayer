@@ -85,19 +85,20 @@ public class AudioPager extends BasePager {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             MediaItem mediaItem = mediaItems.get(position);
-            if (MusicPlayCenter.getMusicPlayCenter().getPlayMusicService() != null) {
-                MusicPlayCenter.getMusicPlayCenter().getPlayMusicService().play(position);
-            }
-
 
             // TODO: 2017/12/27  调启 系统所有的播放器--隐式意图
 //            Intent intent = new Intent();
 //            intent.setDataAndType(Uri.parse(mediaItem.getData()),"video/*");
 //            context.startActivity(intent);
             // TODO: 2017/12/27 调用自己写的播放器 --显示意图  MediaPlayer 和 VideoView
-//            Intent intent = new Intent(context,SystemAudioPlayer.class);
-//            intent.putExtra("mediaItem",mediaItem);
-//            context.startActivity(intent);
+            Intent intent = new Intent(context,SystemAudioPlayer.class);
+            intent.putExtra("mediaItem",mediaItem);
+            context.startActivity(intent);
+
+
+            if (MusicPlayCenter.getMusicPlayCenter().getPlayMusicService() != null) {
+                MusicPlayCenter.getMusicPlayCenter().getPlayMusicService().play(position);
+            }
             /**
              * Android 系统中提供开发者开发多媒体应用（音视频）
              * MediaPlayer 和 VideoView

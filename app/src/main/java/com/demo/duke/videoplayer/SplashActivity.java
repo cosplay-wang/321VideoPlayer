@@ -1,7 +1,6 @@
 package com.demo.duke.videoplayer;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,6 +16,7 @@ import com.bumptech.glide.Glide;
 import com.demo.duke.videoplayer.domain.SplashBean;
 import com.demo.duke.videoplayer.http.HttpUtils;
 import com.demo.duke.videoplayer.util.JsonUtil;
+import com.demo.duke.videoplayer.util.PreferencesUtil;
 import com.demo.duke.videoplayer.util.UrlUtil;
 
 import io.reactivex.Observable;
@@ -24,7 +24,6 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.Response;
@@ -41,6 +40,7 @@ public class SplashActivity extends AppCompatActivity {
         setSystemBarTransparent();
         setContentView(R.layout.activity_splash);
         splashImage = findViewById(R.id.splash_image);
+        PreferencesUtil.init(this);
         doData();
 
     }

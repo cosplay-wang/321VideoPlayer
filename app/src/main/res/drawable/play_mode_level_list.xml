@@ -4,9 +4,10 @@
         android:drawable="@drawable/play_btn_loop_selector"
         android:maxLevel="0" />
     <item
-        android:drawable="@drawable/play_btn_shuffle_selector"
+        android:drawable="@drawable/play_btn_one_selector"
         android:maxLevel="1" />
     <item
-        android:drawable="@drawable/play_btn_one_selector"
+        android:drawable="@drawable/play_btn_shuffle_selector"
         android:maxLevel="2" />
+
 </level-list>

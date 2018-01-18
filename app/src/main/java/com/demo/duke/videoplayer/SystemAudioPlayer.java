@@ -1,29 +1,28 @@
 package com.demo.duke.videoplayer;
 
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.demo.duke.videoplayer.domain.MediaItem;
+import com.demo.duke.videoplayer.service.MusicPlayCenter;
+import com.demo.duke.videoplayer.service.OnPlayEventListener;
+import com.demo.duke.videoplayer.service.PlayModeEnum;
+import com.demo.duke.videoplayer.service.PlayMusicService;
+import com.demo.duke.videoplayer.util.PreferencesUtil;
 import com.demo.duke.videoplayer.util.TimeUtil;
 import com.demo.duke.videoplayer.view.MusicPlayerView;
 
-import java.io.IOException;
+import java.util.prefs.Preferences;
 
-public class SystemAudioPlayer extends AppCompatActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
-    private static final int PROGRESS = 2;
-    private MediaPlayer mediaPlayer;
 
+public class SystemAudioPlayer extends AppCompatActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener, OnPlayEventListener {
+
+    PlayMusicService playMusicService;
     private LinearLayout playTopLin;
     private ImageView ivBack;
     private TextView tvTitle;
@@ -37,6 +36,7 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
     private ImageView ivPlay;
     private ImageView ivNext;
     MediaItem mediaItem;
+    private boolean isDraggingProgress;
 
     private void findViews() {
         setContentView(R.layout.activity_system_audio_player);
@@ -53,7 +53,13 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
         ivPlay = (ImageView) findViewById(R.id.iv_play);
         ivNext = (ImageView) findViewById(R.id.iv_next);
         ivPlay.setOnClickListener(this);
+        ivPrev.setOnClickListener(this);
+        ivNext.setOnClickListener(this);
+        ivMode.setOnClickListener(this);
         sbProgress.setOnSeekBarChangeListener(this);
+
+        playMusicService = MusicPlayCenter.getMusicPlayCenter().getPlayMusicService();
+        playMusicService.setOnPlayEventListener(this);
     }
 
     /**
@@ -65,21 +71,42 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.iv_play) {
-            if (mediaPlayer.isPlaying()) {
+            if (playMusicService.isPlaying()) {
                 ivPlay.setSelected(false);
                 musicplayView.pauseMusic();
                 pause();
             } else {
                 ivPlay.setSelected(true);
                 musicplayView.playMusic();
-                mediaPlayer.start();
-                //发消息
-                Message message = handler.obtainMessage();
-                message.obj = mediaPlayer.getCurrentPosition();
-                message.what = PROGRESS;
-                handler.sendMessage(message);
+                playMusicService.start();
             }
+        } else if (v.getId() == R.id.iv_next) {
+            playMusicService.playNext();
+        } else if (v.getId() == R.id.iv_prev) {
+            playMusicService.playPre();
+        }else if(v.getId() == R.id.iv_mode){
+            switchPlayMode();
         }
+    }
+    private void switchPlayMode() {
+        PlayModeEnum mode = PlayModeEnum.valueOf(PreferencesUtil.getPlayMode());
+        switch (mode) {
+            case LOOP:
+                mode = PlayModeEnum.RANDOM;
+                break;
+            case RANDOM:
+                mode = PlayModeEnum.SINGLE;
+                break;
+            case SINGLE:
+                mode = PlayModeEnum.LOOP;
+                break;
+        }
+        PreferencesUtil.savePlayMode(mode.value());
+        initPlayMode();
+    }
+    private void initPlayMode() {
+        int mode = PreferencesUtil.getPlayMode();
+        ivMode.setImageLevel(mode);
     }
 
     @Override
@@ -87,97 +114,28 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         findViews();
         mediaItem = (MediaItem) getIntent().getSerializableExtra("mediaItem");
-        Uri uri = Uri.parse(mediaItem.getData());
-        if (!mediaItem.getName().isEmpty()) {
-            tvTitle.setText(mediaItem.getName());
-        }
-        if (!mediaItem.getArtist().isEmpty()) {
-            tvArtist.setText(mediaItem.getArtist());
-        }
-        musicplayView.setCover(mediaItem.getCover());
-        try {
-            if (uri != null) {
-                mediaPlayer = new MediaPlayer();
-
-                mediaPlayer.setDataSource(this, uri);
-
-                mediaPlayer.prepareAsync();
-            } else {
-                mediaPlayer = MediaPlayer.create(this, R.raw.ywcbs);
-                mediaPlayer.prepare();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        mediaPlayer.setLooping(true);
-        mediaPlayer.setOnCompletionListener(new MyOnCompletionListener());
-        mediaPlayer.setOnErrorListener(new MyOnErrorListener());
-        mediaPlayer.setOnBufferingUpdateListener(new MyOnBufferingUpdateListener());//缓冲的进度  ，不是播放的进度
-        mediaPlayer.setOnPreparedListener(new MyOnPreparedListener());
+        updatePlayView(mediaItem);
+        initPlayMode();
     }
 
-    Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case PROGRESS:
-                    if (mediaPlayer != null) {
-                        if (mediaPlayer.isPlaying()) {
-                            //1.得到当前的播放进度
 
-                            int currentPisition = mediaPlayer.getCurrentPosition();
-                            //2. 设置seekbar setprogress
-                            sbProgress.setProgress(currentPisition);
-                            //3 每秒更新一次
-                            removeMessages(PROGRESS);
-
-                            handler.sendEmptyMessageDelayed(PROGRESS, 1 * 1000);
-                            //4 更新时间
-                            tvCurrentTime.setText(TimeUtil.getFormatedDateTime("mm:ss", currentPisition));
-                        }
-                        break;
-                    }
-            }
+    @Override
+    public void updateProgress(int progress) {
+        if (!isDraggingProgress) {
+            sbProgress.setProgress(progress);
+            //4 更新时间
+            tvCurrentTime.setText(TimeUtil.getFormatedDateTime("mm:ss", progress));
         }
-    };
 
-    class MyOnPreparedListener implements MediaPlayer.OnPreparedListener {
-        //当底层解码完毕
-        @Override
-        public void onPrepared(MediaPlayer mp) {
-            mediaPlayer.start();
-            ivPlay.setSelected(true);
-            musicplayView.playMusic();
-            int duration = mp.getDuration();//音频的总时长   mp.getDuration(); 关联总长度
-            sbProgress.setMax(duration);
-            tvTotalTime.setText(TimeUtil.getFormatedDateTime("mm:ss", duration));
-            Log.e("TimeUtil", TimeUtil.getFormatedDateTime("HH:mm:ss", duration));
-
-            //发消息
-            Message message = handler.obtainMessage();
-            message.obj = mp.getCurrentPosition();
-            message.what = PROGRESS;
-            handler.sendMessage(message);
-
-        }
     }
 
-    class MyOnErrorListener implements MediaPlayer.OnErrorListener {
-        @Override
-        public boolean onError(MediaPlayer mp, int what, int extra) {
-            Toast.makeText(SystemAudioPlayer.this, "出错了", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-    }
 
     /**
      * 暂停
      */
     public void pause() {
-        if (mediaPlayer != null) {
-            mediaPlayer.pause();
+        if (playMusicService != null) {
+            playMusicService.pause();
         }
     }
 
@@ -185,7 +143,7 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
      * 停止
      */
     public void stop() {
-        if (mediaPlayer != null) {
+        if (playMusicService != null) {
             /**
              * MediaPlayer.release()方法可销毁MediaPlayer的实例。销毁是“停止”的一种具有攻击意味的说法，
              * 但我们有充足的理由使用销毁一词。
@@ -195,50 +153,67 @@ public class SystemAudioPlayer extends AppCompatActivity implements View.OnClick
              * 。不过，对于简单的音频播放应用，建议 使用release()方法销毁实例，并在需要时进行重见。基于以上原因，有一个简单可循的规则：
              * 只保留一个MediaPlayer实例，保留时长即音频文件 播放的时长。
              */
-            mediaPlayer.release();
-            mediaPlayer = null;
+            playMusicService.stop();
+            //   playMusicService.release();
+            playMusicService = null;
         }
     }
 
-    class MyOnCompletionListener implements MediaPlayer.OnCompletionListener {
-        @Override
-        public void onCompletion(MediaPlayer mp) {
-            //在调用oncompletion  方法的时候代表 播放完毕，
-            //  stop();
-            Toast.makeText(SystemAudioPlayer.this, "播放完成：", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    class MyOnBufferingUpdateListener implements MediaPlayer.OnBufferingUpdateListener {
-        @Override
-        public void onBufferingUpdate(MediaPlayer mp, int percent) {
-            sbProgress.setProgress(mp.getCurrentPosition());
-            tvCurrentTime.setText(TimeUtil.getFormatedDateTime("mm:ss", mp.getCurrentPosition()));
-        }
-    }
 
     @Override
     protected void onStop() {
         super.onStop();
-        stop();
+        //   stop();
     }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (fromUser) {
-            if (mediaPlayer != null) {
-                mediaPlayer.seekTo(progress);
-            }
-        }
+        //4 更新时间
+        tvCurrentTime.setText(TimeUtil.getFormatedDateTime("mm:ss", progress));
     }
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-
+        isDraggingProgress = true;
     }
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
 
+        if (playMusicService != null) {
+            isDraggingProgress = false;
+            playMusicService.seekTo(seekBar.getProgress());
+
+        }
+
+
+    }
+
+    @Override
+    public void setTotalTime(int totalTime) {
+        sbProgress.setMax(totalTime);
+        tvTotalTime.setText(TimeUtil.getFormatedDateTime("mm:ss", totalTime));
+    }
+
+    @Override
+    public void startView(boolean isStart) {
+        if (isStart) {
+            ivPlay.setSelected(true);
+            musicplayView.playMusic();
+        } else {
+            ivPlay.setSelected(false);
+            musicplayView.pauseMusic();
+        }
+    }
+
+    @Override
+    public void updatePlayView(MediaItem mediaItem) {
+        if (!mediaItem.getName().isEmpty()) {
+            tvTitle.setText(mediaItem.getName());
+        }
+        if (!mediaItem.getArtist().isEmpty()) {
+            tvArtist.setText(mediaItem.getArtist());
+        }
+        musicplayView.setCover(mediaItem.getCover());
     }
 }
